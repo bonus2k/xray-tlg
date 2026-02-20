@@ -86,8 +86,20 @@ make test
 
 ## Установка как systemd-сервис
 
+Рекомендуемый порядок (чтобы `sudo` не требовал `go` в `PATH`):
+
 ```bash
-make install-service TOKEN=<telegram_token>
+make build
+sudo make install-service TOKEN=<telegram_token>
+```
+
+`install-service` ожидает, что бинарник уже собран (`bin/xray-tlg`).
+
+Можно установить только бинарник:
+
+```bash
+make build
+sudo make install
 ```
 
 Требования:
@@ -97,7 +109,7 @@ make install-service TOKEN=<telegram_token>
 Дополнительные параметры установки (опционально):
 
 ```bash
-make install-service \
+sudo make install-service \
   TOKEN=<telegram_token> \
   XRAY_CONFIGS_DIR=/usr/local/etc/xray \
   XRAY_CONFIG_PATH=/etc/xray/config.json \
@@ -107,7 +119,6 @@ make install-service \
 ```
 
 Что делает цель:
-- собирает бинарник в `bin/xray-tlg`
 - ставит бинарник в `/usr/local/bin/xray-tlg`
 - ставит unit в `/etc/systemd/system/xray-tlg.service`
 - создаёт `/etc/xray-tlg/xray-tlg.env` и записывает в него `TOKEN`
@@ -127,6 +138,7 @@ journalctl -u xray-tlg -f
 Обновление параметров сервиса:
 - повторно запустить `make install-service ...` с новыми значениями;
 - цель перезапишет env/config, выполнит `daemon-reload` и перезапустит сервис через `enable --now`.
+- unit использует `WorkingDirectory=/etc/xray-tlg`.
 
 ## Удаление сервиса
 
