@@ -1,0 +1,9 @@
+{
+  "run_mode": "console",
+  "token": "",
+  "xray_configs_dir": "./testdata/xray-configs",
+  "xray_config_path": "./testdata/active/config.json",
+  "service_name": "xray",
+  "lock_timeout": "90s",
+  "log_level": "debug"
+}
