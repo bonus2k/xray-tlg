@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 Group=root
-WorkingDirectory=/opt/xray-tlg
+WorkingDirectory=/etc/xray-tlg
 Environment=RUN_MODE=service
 Environment=CONFIG=/etc/xray-tlg/config.json
 EnvironmentFile=-/etc/xray-tlg/xray-tlg.env

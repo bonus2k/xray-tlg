@@ -138,6 +138,7 @@ journalctl -u xray-tlg -f
 Обновление параметров сервиса:
 - повторно запустить `make install-service ...` с новыми значениями;
 - цель перезапишет env/config, выполнит `daemon-reload` и перезапустит сервис через `enable --now`.
+- unit использует `WorkingDirectory=/etc/xray-tlg`.
 
 ## Удаление сервиса
 
