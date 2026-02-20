@@ -15,7 +15,7 @@ LOCK_TIMEOUT ?= 90s
 LOG_LEVEL ?= info
 GOCACHE ?= /tmp/go-build
 
-.PHONY: build test run run-local check-copy clean install install-service uninstall-service
+.PHONY: build test run run-local check-copy clean install install-service uninstall-service ensure-binary
 
 build:
 	mkdir -p $(BIN_DIR)
@@ -40,7 +40,10 @@ check-copy:
 clean:
 	rm -rf $(BIN_DIR)
 
-install: build
+ensure-binary:
+	@test -x $(BIN_PATH) || (echo "Binary $(BIN_PATH) not found. Run: make build"; exit 1)
+
+install: ensure-binary
 	install -m 0755 $(BIN_PATH) $(INSTALL_BIN)
 
 install-service: install
