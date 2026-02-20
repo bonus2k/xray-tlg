@@ -2,67 +2,77 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/bonus2k/xray-tlg/internal/handlers"
+	"github.com/bonus2k/xray-tlg/internal/logger"
+	"github.com/bonus2k/xray-tlg/internal/router"
 	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-)
-
-const (
-	token = ""
+	"github.com/jessevdk/go-flags"
+	"go.uber.org/zap"
 )
 
 func main() {
+	cfg, err := LoadConfig(os.Args)
+	if err != nil {
+		var fe *flags.Error
+		if errors.As(err, &fe) && errors.Is(fe.Type, flags.ErrHelp) {
+			os.Exit(0)
+		}
+		exitWithBootstrapError("config error", err)
+	}
+
+	appLogger, err := logger.New(cfg.LogLevel)
+	if err != nil {
+		exitWithBootstrapError("logger init error", err)
+	}
+	defer func() {
+		_ = appLogger.Sync()
+	}()
+	duration, _ := time.ParseDuration(cfg.LockTimeout)
+	appLogger.Info("configuration loaded",
+		zap.String("run_mode", cfg.RunMode),
+		zap.String("config_path", cfg.ConfigPath),
+		zap.String("xray_configs_dir", cfg.XrayConfigsDir),
+		zap.String("xray_config_path", cfg.XrayConfigPath),
+		zap.String("service_name", cfg.ServiceName),
+		zap.Duration("lock_timeout", duration),
+	)
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	opts := []bot.Option{
-		bot.WithDefaultHandler(defaultHandler),
-		bot.WithCallbackQueryDataHandler("button", bot.MatchTypePrefix, callbackHandler),
+	handler, err := handlers.NewHandler(cfg.XrayConfigsDir, cfg.XrayConfigPath, cfg.ServiceName, duration, appLogger)
+	if err != nil {
+		appLogger.Error("handler init failed", zap.Error(err))
+		os.Exit(1)
 	}
 
-	b, err := bot.New(token, opts...)
-	if nil != err {
-		// panics for the sake of simplicity.
-		// you should handle this error properly in your code.
-		panic(err)
+	opts := router.GetRouter(handler)
+
+	telegramBot, err := bot.New(cfg.Token, opts...)
+	if err != nil {
+		appLogger.Error("telegram bot init failed", zap.Error(err))
+		os.Exit(1)
 	}
 
-	b.Start(ctx)
+	appLogger.Info("bot started")
+	telegramBot.Start(ctx)
+	appLogger.Info("bot stopped")
 }
 
-func callbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	// answering callback query first to let Telegram know that we received the callback query,
-	// and we're handling it. Otherwise, Telegram might retry sending the update repetitively
-	// as it thinks the callback query doesn't reach to our application. learn more by
-	// reading the footnote of the https://core.telegram.org/bots/api#callbackquery type.
-	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
-		CallbackQueryID: update.CallbackQuery.ID,
-		ShowAlert:       false,
-	})
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.CallbackQuery.Message.Message.Chat.ID,
-		Text:   "You selected the button: " + update.CallbackQuery.Data,
-	})
-}
-
-func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	kb := &models.InlineKeyboardMarkup{
-		InlineKeyboard: [][]models.InlineKeyboardButton{
-			{
-				{Text: "Button 1", CallbackData: "button_1"},
-			}, {
-				{Text: "Button 2", CallbackData: "button_2"},
-			}, {
-				{Text: "Button 3", CallbackData: "button_3"},
-			},
-		},
+func exitWithBootstrapError(message string, err error) {
+	bootstrapLogger, loggerErr := logger.New("error")
+	if loggerErr != nil {
+		os.Exit(1)
 	}
+	defer func() {
+		_ = bootstrapLogger.Sync()
+	}()
 
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		Text:        "Click by button",
-		ReplyMarkup: kb,
-	})
+	bootstrapLogger.Error(message, zap.Error(err))
+	os.Exit(1)
 }

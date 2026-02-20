@@ -1,0 +1,18 @@
+[Unit]
+Description=Telegram bot for Xray management
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/xray-tlg
+Environment=RUN_MODE=service
+Environment=CONFIG=/etc/xray-tlg/config.json
+EnvironmentFile=-/etc/xray-tlg/xray-tlg.env
+ExecStart=/usr/local/bin/xray-tlg --run-mode=service --config=/etc/xray-tlg/config.json
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

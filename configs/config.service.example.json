@@ -1,0 +1,9 @@
+{
+  "run_mode": "service",
+  "token": "123456:telegram-bot-token",
+  "xray_configs_dir": "/usr/local/etc/xray",
+  "xray_config_path": "/etc/xray/config.json",
+  "service_name": "xray",
+  "lock_timeout": "90s",
+  "log_level": "info"
+}

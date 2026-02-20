@@ -1,0 +1,9 @@
+{
+  "run_mode": "console",
+  "token": "123456:telegram-bot-token",
+  "xray_configs_dir": "./testdata/xray-configs",
+  "xray_config_path": "./testdata/xray-configs/config.json",
+  "service_name": "xray",
+  "lock_timeout": "90s",
+  "log_level": "info"
+}

@@ -1,0 +1,5 @@
+{
+  "inbounds": [{"port": 1080, "protocol": "socks"}],
+  "outbounds": [{"protocol": "trojan", "tag": "asia"}],
+  "remarks": "ASIA client"
+}
