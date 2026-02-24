@@ -77,9 +77,9 @@ func NewHandler(xrayConfigsDir, xrayConfigPath, serviceName string, lockTimeout 
 
 var mainMenuKeyboard = &models.InlineKeyboardMarkup{
 	InlineKeyboard: [][]models.InlineKeyboardButton{
-		{{Text: "📂 Выбрать конфиг", CallbackData: "ls_config"}},
-		{{Text: "📶 Запустить speedtest", CallbackData: "speedtest"}},
-		{{Text: "🔄 Перезапустить Xray", CallbackData: "restart"}},
+		{{Text: "📂 Select Config", CallbackData: "ls_config"}},
+		{{Text: "📶 Run Speedtest", CallbackData: "speedtest"}},
+		{{Text: "🔄 Restart Xray", CallbackData: "restart"}},
 	},
 }
 
@@ -95,7 +95,7 @@ func (h *Handler) ListConfigXrayHandler(ctx context.Context, b *bot.Bot, update 
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   messageID,
-			Text:        "📂 Выберите конфиг для активации:",
+			Text:        "📂 Choose a config to activate:",
 			ReplyMarkup: buildConfigListKeyboard(dirEntries),
 		}); err != nil {
 			return fmt.Errorf("edit config list message: %w", err)
@@ -112,7 +112,7 @@ func (h *Handler) RestartXrayHandler(ctx context.Context, b *bot.Bot, update *mo
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:    chatID,
 			MessageID: messageID,
-			Text:      "🔄 Перезапускаю сервис, подождите...",
+			Text:      "🔄 Restarting the service, please wait...",
 		}); err != nil {
 			return fmt.Errorf("set restart progress message: %w", err)
 		}
@@ -124,7 +124,7 @@ func (h *Handler) RestartXrayHandler(ctx context.Context, b *bot.Bot, update *mo
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   messageID,
-			Text:        fmt.Sprintf("✅ Сервис <code>%s</code> успешно перезапущен.", h.serviceName),
+			Text:        fmt.Sprintf("✅ Service <code>%s</code> restarted successfully.", h.serviceName),
 			ParseMode:   models.ParseModeHTML,
 			ReplyMarkup: mainMenuKeyboard,
 		}); err != nil {
@@ -143,7 +143,7 @@ func (h *Handler) CopyConfigXrayHandler(ctx context.Context, b *bot.Bot, update 
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:    chatID,
 			MessageID: messageID,
-			Text:      "🛠 Применяю выбранный конфиг...",
+			Text:      "🛠 Applying the selected config...",
 		}); err != nil {
 			return fmt.Errorf("set copy progress message: %w", err)
 		}
@@ -155,7 +155,7 @@ func (h *Handler) CopyConfigXrayHandler(ctx context.Context, b *bot.Bot, update 
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   messageID,
-			Text:        fmt.Sprintf("✅ Конфиг <code>%s</code> применён в <code>%s</code>.", fileName, h.xrayConfigPath),
+			Text:        fmt.Sprintf("✅ Config <code>%s</code> was applied to <code>%s</code>.", fileName, h.xrayConfigPath),
 			ParseMode:   models.ParseModeHTML,
 			ReplyMarkup: mainMenuKeyboard,
 		}); err != nil {
@@ -173,7 +173,7 @@ func (h *Handler) SpeedtestHandler(ctx context.Context, b *bot.Bot, update *mode
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:    chatID,
 			MessageID: messageID,
-			Text:      "📶 Выполняется speedtest тест. Это может занять до 90 секунд...",
+			Text:      "📶 Running speedtest. This can take up to 90 seconds...",
 		}); err != nil {
 			return fmt.Errorf("set speedtest progress message: %w", err)
 		}
@@ -214,7 +214,7 @@ func (h *Handler) DefaultHandler(ctx context.Context, b *bot.Bot, update *models
 	h.logger.Info("open main menu", zap.Int64("chat_id", chatID))
 	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
-		Text:        "👋 Выберите действие:\n• применить конфиг\n• проверить скорость\n• перезапустить Xray",
+		Text:        "👋 Choose an action:\n• apply config\n• check speed\n• restart Xray",
 		ReplyMarkup: mainMenuKeyboard,
 	}); err != nil {
 		h.logger.Error("send main menu failed", zap.Error(err), zap.Int64("chat_id", chatID))
@@ -226,7 +226,7 @@ func (h *Handler) MainHandler(ctx context.Context, b *bot.Bot, update *models.Up
 		if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   messageID,
-			Text:        "🏠 Главное меню. Выберите действие:",
+			Text:        "🏠 Main menu. Choose an action:",
 			ReplyMarkup: mainMenuKeyboard,
 		}); err != nil {
 			return fmt.Errorf("set main menu message: %w", err)
@@ -310,7 +310,7 @@ func (h *Handler) sendBusyMessage(ctx context.Context, b *bot.Bot, update *model
 		return
 	}
 
-	messageText := fmt.Sprintf("⏳ Уже выполняется команда: %s. Попробуйте через %s.", busyErr.action, roundDurationToSeconds(busyErr.remaining))
+	messageText := fmt.Sprintf("⏳ Command already in progress: %s. Try again in %s.", busyErr.action, roundDurationToSeconds(busyErr.remaining))
 
 	if update.CallbackQuery != nil {
 		if _, callbackErr := b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
@@ -337,7 +337,7 @@ func (h *Handler) sendHandlerError(ctx context.Context, b *bot.Bot, chatID int64
 	if _, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   messageID,
-		Text:        "⚠️ Произошла ошибка. Пожалуйста, повторите запрос.",
+		Text:        "⚠️ Something went wrong. Please try again.",
 		ReplyMarkup: mainMenuKeyboard,
 	}); err != nil {
 		h.logger.Error("failed to send user-facing error message", zap.Error(err), zap.Int64("chat_id", chatID))
@@ -346,7 +346,7 @@ func (h *Handler) sendHandlerError(ctx context.Context, b *bot.Bot, chatID int64
 
 func buildConfigListKeyboard(entries []os.DirEntry) *models.InlineKeyboardMarkup {
 	buttons := make([][]models.InlineKeyboardButton, 0, len(entries)+1)
-	buttons = append(buttons, []models.InlineKeyboardButton{{Text: "⬅️ В главное меню", CallbackData: "main"}})
+	buttons = append(buttons, []models.InlineKeyboardButton{{Text: "⬅️ Back to Main Menu", CallbackData: "main"}})
 
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -485,7 +485,7 @@ func runSpeedTest(ctx context.Context, timeout time.Duration) (speedTestResult, 
 
 func formatSpeedTestMessage(r speedTestResult) string {
 	return fmt.Sprintf(
-		"<b>📶 Результат speedtest</b>\n\n<b>🛰 Сервер:</b> %s (%s, %s)\n<b>🌐 Хост:</b> <code>%s</code>\n<b>⏱ Latency:</b> %s\n<b>📉 Jitter:</b> %s\n<b>📦 Packet loss:</b> %s\n<b>⬇️ Download:</b> %s\n<b>⬆️ Upload:</b> %s",
+		"<b>📶 Speedtest Result</b>\n\n<b>🛰 Server:</b> %s (%s, %s)\n<b>🌐 Host:</b> <code>%s</code>\n<b>⏱ Latency:</b> %s\n<b>📉 Jitter:</b> %s\n<b>📦 Packet loss:</b> %s\n<b>⬇️ Download:</b> %s\n<b>⬆️ Upload:</b> %s",
 		r.ServerName,
 		r.Sponsor,
 		r.Country,
